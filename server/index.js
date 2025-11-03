@@ -17,6 +17,24 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Root route - ADDED THIS
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'LocalDevHub API is running!',
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      projects: '/api/projects',
+      users: '/api/users',
+      messages: '/api/messages',
+      dashboard: '/api/dashboard'
+    },
+    documentation: 'Check /api/health for detailed status'
+  });
+});
+
 // MongoDB connection (uses provided Atlas user by default, with ENV override)
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/localdevhub';
 
