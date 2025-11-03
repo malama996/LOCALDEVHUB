@@ -9,15 +9,37 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
-// Middleware
+// Permanent CORS Solution - REPLACE THIS SECTION
+const allowedOrigins = [
+  'https://localdevhub-4.onrender.com',
+  'http://localhost:3000',
+  'https://localhost:3000'
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://localdevhub-4.onrender.com',
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('🚫 CORS blocked for origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With']
 }));
+
+// Handle preflight requests properly
+app.options('*', cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Root route - ADDED THIS
+// Root route
 app.get('/', (req, res) => {
   res.json({ 
     message: 'LocalDevHub API is running!',
@@ -111,7 +133,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📡 Health: http://localhost:${PORT}/api/health`);
-  console.log(`🔗 Frontend: ${process.env.FRONTEND_URL || 'https://localdevhub-4.onrender.com'}`);
+  console.log(`🔗 Allowed Frontends: ${allowedOrigins.join(', ')}`);
 });
 
 module.exports = app;
