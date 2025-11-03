@@ -11,7 +11,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'https://localdevhub-4.onrender.com',
   credentials: true
 }));
 app.use(express.json());
@@ -111,7 +111,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📡 Health: http://localhost:${PORT}/api/health`);
-  console.log(`🔗 Frontend: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  console.log(`🔗 Frontend: ${process.env.FRONTEND_URL || 'https://localdevhub-4.onrender.com'}`);
 });
 
 module.exports = app;
