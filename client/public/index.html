@@ -4,6 +4,22 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Permanent CSP Solution -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' https://localdevhub-2.onrender.com;
+                   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://localdevhub-2.onrender.com;
+                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                   font-src 'self' https://fonts.gstatic.com data:;
+                   img-src 'self' data: https: blob:;
+                   connect-src 'self' https://localdevhub-2.onrender.com wss:;
+                   frame-src 'none';
+                   object-src 'none';
+                   base-uri 'self';
+                   form-action 'self';"
+    />
+
     <meta name="theme-color" content="#667eea" />
     <meta
       name="description"
