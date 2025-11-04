@@ -16,9 +16,6 @@ const validateJWTConfig = () => {
   console.log('✅ JWT configuration validated');
 };
 
-// Call this when your app starts
-validateJWTConfig();
-
 // Enhanced token generation with proper security
 const generateToken = (userId, userType = 'user') => {
   const payload = {
@@ -47,7 +44,7 @@ const verifyToken = (token) => {
 // Token blacklist (use Redis in production)
 const tokenBlacklist = new Set();
 
-// Your existing auth functions with production improvements...
+// Register function
 const register = async (req, res) => {
   try {
     // Validate JWT secret is available
@@ -57,7 +54,6 @@ const register = async (req, res) => {
       });
     }
 
-    // ... rest of your register function
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -123,6 +119,213 @@ const register = async (req, res) => {
     res.status(500).json({
       message: 'Server error during registration',
       ...(process.env.NODE_ENV === 'development' && { error: error.message })
+    });
+  }
+};
+
+// ADD THE MISSING LOGIN FUNCTION
+const login = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, password } = req.body;
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return res.status(401).json({
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({
+        message: 'Account is deactivated'
+      });
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate token
+    const token = generateToken(user._id, user.userType);
+
+    // Return user data without password
+    const userResponse = user.getPublicProfile();
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: userResponse
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      message: 'Server error during login',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// ADD THE MISSING GET PROFILE FUNCTION
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    const userResponse = user.getPublicProfile();
+    res.json({
+      message: 'Profile retrieved successfully',
+      user: userResponse
+    });
+
+  } catch (error) {
+    console.error('Get profile error:', error);
+    res.status(500).json({
+      message: 'Server error retrieving profile',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// ADD THE MISSING UPDATE PROFILE FUNCTION
+const updateProfile = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const userId = req.user.userId;
+    const updateData = req.body;
+
+    // Remove sensitive fields
+    delete updateData.password;
+    delete updateData.email;
+    delete updateData._id;
+    delete updateData.createdAt;
+    delete updateData.updatedAt;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    const userResponse = user.getPublicProfile();
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: userResponse
+    });
+
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({
+      message: 'Server error updating profile',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// ADD THE MISSING LOGOUT FUNCTION
+const logout = async (req, res) => {
+  try {
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (token) {
+      // Add token to blacklist
+      tokenBlacklist.add(token);
+    }
+
+    res.json({
+      message: 'Logout successful'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      message: 'Server error during logout',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+};
+
+// ADD THE MISSING CHANGE PASSWORD FUNCTION
+const changePassword = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.json({
+      message: 'Password changed successfully'
+    });
+
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({
+      message: 'Server error changing password',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
     });
   }
 };
