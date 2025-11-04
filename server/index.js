@@ -91,12 +91,12 @@ mongoose.connection.on('error', (err) => console.error('MongoDB connection error
 mongoose.connection.on('disconnected', () => console.log('MongoDB disconnected'));
 mongoose.connection.on('connected', () => console.log('MongoDB connected'));
 
-// ✅ FIXED ROUTE PATHS - Added 'server/' directory
-app.use('/api/auth', require('./server/routes/authRoutes'));
-app.use('/api/projects', require('./server/routes/projectRoutes'));
-app.use('/api/users', require('./server/routes/userRoutes'));
-app.use('/api/messages', require('./server/routes/messageRoutes'));
-app.use('/api/dashboard', require('./server/routes/dashboardRoutes'));
+// ✅ FIXED ROUTE PATHS - Remove 'server/' prefix since index.js is already in server directory
+app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/projects', require('./routes/projectRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/messages', require('./routes/messageRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
