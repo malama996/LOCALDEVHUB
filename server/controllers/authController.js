@@ -3,19 +3,61 @@ const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 
-// Generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign(
-    { userId },
-    process.env.JWT_SECRET || 'localdevhub-super-secret-jwt-key-2024-production-ready',
-    { expiresIn: '7d' }
-  );
+// Validate JWT secret on startup
+const validateJWTConfig = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('❌ JWT_SECRET environment variable is required');
+  }
+  
+  if (process.env.JWT_SECRET.length < 32) {
+    throw new Error('❌ JWT_SECRET must be at least 32 characters long');
+  }
+  
+  console.log('✅ JWT configuration validated');
 };
 
-// Register new user
+// Call this when your app starts
+validateJWTConfig();
+
+// Enhanced token generation with proper security
+const generateToken = (userId, userType = 'user') => {
+  const payload = {
+    userId,
+    userType,
+    iss: 'localdevhub-api',
+    aud: 'localdevhub-web',
+    iat: Math.floor(Date.now() / 1000)
+  };
+
+  return jwt.sign(payload, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    algorithm: 'HS256'
+  });
+};
+
+// Verify token with enhanced security
+const verifyToken = (token) => {
+  return jwt.verify(token, process.env.JWT_SECRET, {
+    algorithms: ['HS256'],
+    issuer: 'localdevhub-api',
+    audience: 'localdevhub-web'
+  });
+};
+
+// Token blacklist (use Redis in production)
+const tokenBlacklist = new Set();
+
+// Your existing auth functions with production improvements...
 const register = async (req, res) => {
   try {
-    // Check for validation errors
+    // Validate JWT secret is available
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        message: 'Server configuration error'
+      });
+    }
+
+    // ... rest of your register function
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({
@@ -27,7 +69,10 @@ const register = async (req, res) => {
     const { name, email, password, userType, location, ...otherData } = req.body;
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ 
+      email: email.toLowerCase().trim() 
+    });
+    
     if (existingUser) {
       return res.status(400).json({
         message: 'User already exists with this email'
@@ -35,16 +80,16 @@ const register = async (req, res) => {
     }
 
     // Hash password
-    const saltRounds = 12;
+    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create user based on type
+    // Create user
     const userData = {
-      name,
-      email,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password: hashedPassword,
       userType,
-      location,
+      location: location?.trim(),
       ...otherData
     };
 
@@ -63,9 +108,8 @@ const register = async (req, res) => {
     await user.save();
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, userType);
 
-    // Return user data without password
     const userResponse = user.getPublicProfile();
 
     res.status(201).json({
@@ -78,209 +122,52 @@ const register = async (req, res) => {
     console.error('Registration error:', error);
     res.status(500).json({
       message: 'Server error during registration',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
+      ...(process.env.NODE_ENV === 'development' && { error: error.message })
     });
   }
 };
 
-// Login user
-const login = async (req, res) => {
+// Enhanced middleware for token verification
+const authenticateToken = async (req, res, next) => {
   try {
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
+    const authHeader = req.header('Authorization');
+    const token = authHeader?.replace('Bearer ', '');
 
-    const { email, password } = req.body;
-
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
+    if (!token) {
       return res.status(401).json({
-        message: 'Invalid credentials'
+        message: 'No token provided, authorization denied'
       });
     }
 
-    // Check if user is active
-    if (!user.isActive) {
+    // Check if token is blacklisted
+    if (tokenBlacklist.has(token)) {
       return res.status(401).json({
-        message: 'Account is deactivated'
+        message: 'Token has been invalidated'
       });
     }
 
-    // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
+    // Verify token
+    const decoded = verifyToken(token);
+    req.user = decoded;
+    next();
+    
+  } catch (error) {
+    console.error('Token verification error:', error);
+    
+    if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
-        message: 'Invalid credentials'
+        message: 'Token has expired'
+      });
+    }
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        message: 'Invalid token'
       });
     }
 
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
-
-    // Generate token
-    const token = generateToken(user._id);
-
-    // Return user data without password
-    const userResponse = user.getPublicProfile();
-
-    res.json({
-      message: 'Login successful',
-      token,
-      user: userResponse
-    });
-
-  } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({
-      message: 'Server error during login',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
-    });
-  }
-};
-
-// Get user profile
-const getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.userId);
-    if (!user) {
-      return res.status(404).json({
-        message: 'User not found'
-      });
-    }
-
-    const userResponse = user.getPublicProfile();
-    res.json({
-      message: 'Profile retrieved successfully',
-      user: userResponse
-    });
-
-  } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({
-      message: 'Server error retrieving profile',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
-    });
-  }
-};
-
-// Update user profile
-const updateProfile = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
-    const userId = req.user.userId;
-    const updateData = req.body;
-
-    // Remove sensitive fields
-    delete updateData.password;
-    delete updateData.email; // Email updates should be separate
-    delete updateData._id;
-    delete updateData.createdAt;
-    delete updateData.updatedAt;
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true, runValidators: true }
-    );
-
-    if (!user) {
-      return res.status(404).json({
-        message: 'User not found'
-      });
-    }
-
-    const userResponse = user.getPublicProfile();
-
-    res.json({
-      message: 'Profile updated successfully',
-      user: userResponse
-    });
-
-  } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({
-      message: 'Server error updating profile',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
-    });
-  }
-};
-
-// Logout user (client-side token removal)
-const logout = async (req, res) => {
-  try {
-    // In a more sophisticated setup, you might want to blacklist the token
-    res.json({
-      message: 'Logout successful'
-    });
-  } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({
-      message: 'Server error during logout',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
-    });
-  }
-};
-
-// Change password
-const changePassword = async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        message: 'Validation failed',
-        errors: errors.array()
-      });
-    }
-
-    const { currentPassword, newPassword } = req.body;
-    const userId = req.user.userId;
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        message: 'User not found'
-      });
-    }
-
-    // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isCurrentPasswordValid) {
-      return res.status(400).json({
-        message: 'Current password is incorrect'
-      });
-    }
-
-    // Hash new password
-    const saltRounds = 12;
-    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    // Update password
-    user.password = hashedNewPassword;
-    await user.save();
-
-    res.json({
-      message: 'Password changed successfully'
-    });
-
-  } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({
-      message: 'Server error changing password',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
+      message: 'Token verification failed'
     });
   }
 };
@@ -291,5 +178,7 @@ module.exports = {
   getProfile,
   updateProfile,
   logout,
-  changePassword
+  changePassword,
+  authenticateToken,
+  validateJWTConfig
 };

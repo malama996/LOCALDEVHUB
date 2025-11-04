@@ -119,7 +119,7 @@ const getStats = async (req, res) => {
     console.error('Get stats error:', error);
     res.status(500).json({
       message: 'Server error retrieving stats',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
+      error: process.env.NODE_ENV === 'production' ? error.message : {}
     });
   }
 };

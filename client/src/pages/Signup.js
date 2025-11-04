@@ -5,10 +5,10 @@ import './Auth.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    name: 'arnold malama',
+    email: 'arnoldmalamaz@gmail.com',
+    password: 'arnold123',
+    confirmPassword: 'arnold123',
     userType: 'developer'
   });
   const [loading, setLoading] = useState(false);
