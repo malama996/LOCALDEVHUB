@@ -9,7 +9,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 
-// Permanent CORS Solution - REPLACE THIS SECTION
+// Permanent CORS Solution
 const allowedOrigins = [
   'https://localdevhub-4.onrender.com',
   'http://localhost:3000',
@@ -18,7 +18,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.includes(origin)) {
@@ -57,7 +56,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// MongoDB connection (uses provided Atlas user by default, with ENV override)
+// MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/localdevhub';
 
 const mongooseOptions = {
@@ -92,12 +91,12 @@ mongoose.connection.on('error', (err) => console.error('MongoDB connection error
 mongoose.connection.on('disconnected', () => console.log('MongoDB disconnected'));
 mongoose.connection.on('connected', () => console.log('MongoDB connected'));
 
-// Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/projects', require('./routes/projectRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/messages', require('./routes/messageRoutes'));
-app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+// ✅ FIXED ROUTE PATHS - Added 'server/' directory
+app.use('/api/auth', require('./server/routes/authRoutes'));
+app.use('/api/projects', require('./server/routes/projectRoutes'));
+app.use('/api/users', require('./server/routes/userRoutes'));
+app.use('/api/messages', require('./server/routes/messageRoutes'));
+app.use('/api/dashboard', require('./server/routes/dashboardRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
