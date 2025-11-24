@@ -98,7 +98,7 @@ const useFeaturedData = () => {
 
 // Reusable Card Components
 const ProjectCard = ({ project }) => (
-  <article className="project-card" role="article" aria-labelledby={`project-title-${project.id}`}>
+  <article className="project-card" aria-labelledby={`project-title-${project.id}`}>
     <div className="project-header">
       <h3 id={`project-title-${project.id}`} className="project-title">
         {project.title}
@@ -173,7 +173,7 @@ ProjectCard.propTypes = {
 };
 
 const DeveloperCard = ({ developer }) => (
-  <article className="developer-card" role="article" aria-labelledby={`developer-name-${developer.id}`}>
+  <article className="developer-card" aria-labelledby={`developer-name-${developer.id}`}>
     <div className="developer-header">
       <div className="developer-avatar">
         <div className="avatar-placeholder" aria-hidden="true">
@@ -287,19 +287,6 @@ const HeroSection = () => (
           <span className="highlight"> Meaningful Projects</span>
         </h1>
         <p className="hero-description">
-          LocalDevHub bridges the gap between talented developers and NGOs/SMEs 
-          seeking software solutions. Build impactful projects while growing your skills 
-          and making a difference in your community.
-        </p>
-        <div className="hero-actions">
-          <Link to="/marketplace" className="btn btn-primary">
-            Browse Projects
-            <i className="fas fa-arrow-right" aria-hidden="true"></i>
-          </Link>
-          <Link to="/join-developer" className="btn btn-secondary">
-            Join as Developer
-            <i className="fas fa-user-plus" aria-hidden="true"></i>
-          </Link>
         </div>
         <div className="hero-features">
           <div className="feature">

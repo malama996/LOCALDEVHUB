@@ -28,18 +28,6 @@ const ProjectCard = ({
     experienceLevel,
     applicationsCount = 0,
     isRemote = false,
-    maxApplicants,
-    urgency
-  } = project;
-
-  // Memoized calculations
-  const formattedDate = useMemo(() => {
-    return new Date(createdAt).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }, [createdAt]);
 
   const timeAgo = useMemo(() => {
     const now = new Date();
