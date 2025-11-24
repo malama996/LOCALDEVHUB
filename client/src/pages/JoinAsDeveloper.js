@@ -5,6 +5,8 @@ import './JoinAsDeveloper.css';
 const JoinAsDeveloper = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [developerProfiles, setDeveloperProfiles] = useState([]);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmitProfile = (profileData) => {
     const newProfile = {
@@ -21,12 +23,40 @@ const JoinAsDeveloper = () => {
     // Here you would typically send the data to your backend API
     console.log('Developer profile submitted:', newProfile);
     
-    // Show success message
-    alert('Profile submitted successfully! We\'ll review it and activate your account soon.');
+    // Show inline success message
+    setSuccessMessage('Profile submitted successfully! We\'ll review it and activate your account soon.');
+    setShowSuccess(true);
+    
+    // Auto-hide success message after 5 seconds
+    setTimeout(() => {
+      setShowSuccess(false);
+    }, 5000);
   };
+
+  const SuccessNotification = () => (
+    <div className="success-notification">
+      <div className="success-content">
+        <i className="fas fa-check-circle"></i>
+        <div className="success-text">
+          <h4>Profile Submitted Successfully!</h4>
+          <p>{successMessage}</p>
+        </div>
+        <button 
+          className="close-success" 
+          onClick={() => setShowSuccess(false)}
+          aria-label="Close notification"
+        >
+          <i className="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="join-developer">
+      {/* Success Notification */}
+      {showSuccess && <SuccessNotification />}
+
       <div className="join-header">
         <div className="container">
           <h1 className="page-title">Join as Developer</h1>
@@ -91,25 +121,48 @@ const JoinAsDeveloper = () => {
               {/* Recent Profiles */}
               {developerProfiles.length > 0 && (
                 <div className="profiles-card">
-                  <h3>Your Developer Profiles</h3>
+                  <div className="profiles-header">
+                    <h3>Your Developer Profiles</h3>
+                    <span className="profiles-count">{developerProfiles.length} profile(s)</span>
+                  </div>
                   <div className="profiles-list">
                     {developerProfiles.map(profile => (
                       <div key={profile.id} className="profile-item">
                         <div className="profile-header">
                           <h4>{profile.title}</h4>
                           <span className={`status ${profile.status}`}>
+                            <i className={`fas ${profile.status === 'pending' ? 'fa-clock' : 'fa-check'}`}></i>
                             {profile.status}
                           </span>
                         </div>
                         <div className="profile-details">
-                          <span className="role">{profile.organization}</span>
-                          <span className="rate">${profile.budget}/hour</span>
-                          <span className="availability">{profile.timeline}</span>
+                          <span className="role">
+                            <i className="fas fa-building"></i>
+                            {profile.organization}
+                          </span>
+                          <span className="rate">
+                            <i className="fas fa-money-bill-wave"></i>
+                            ${profile.budget}/hour
+                          </span>
+                          <span className="availability">
+                            <i className="fas fa-calendar"></i>
+                            {profile.timeline}
+                          </span>
                         </div>
                         <div className="profile-skills">
                           {profile.skills.map((skill, index) => (
                             <span key={index} className="skill-tag">{skill}</span>
                           ))}
+                        </div>
+                        <div className="profile-actions">
+                          <button className="btn-edit">
+                            <i className="fas fa-edit"></i>
+                            Edit
+                          </button>
+                          <button className="btn-view">
+                            <i className="fas fa-eye"></i>
+                            View
+                          </button>
                         </div>
                       </div>
                     ))}

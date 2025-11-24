@@ -2,6 +2,7 @@
   background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
   color: white;
   margin-top: auto;
+  width: 100%;
 }
 
 .footer-container {
@@ -42,25 +43,36 @@
 .social-links {
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
 }
 
 .social-links a {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 50%;
   color: white;
   text-decoration: none;
   transition: all 0.3s ease;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Ensure icons are properly visible */
+.social-links i,
+.social-links svg {
+  display: block;
+  width: 20px;
+  height: 20px;
 }
 
 .social-links a:hover {
   background: linear-gradient(45deg, #667eea, #764ba2);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .footer-heading {
@@ -68,6 +80,18 @@
   font-weight: 600;
   margin: 0 0 20px 0;
   color: white;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.footer-heading::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 30px;
+  height: 2px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
 }
 
 .footer-links {
@@ -78,39 +102,67 @@
 
 .footer-links li {
   margin-bottom: 12px;
+  position: relative;
+  padding-left: 0;
+  transition: padding-left 0.3s ease;
+}
+
+.footer-links li:hover {
+  padding-left: 8px;
+}
+
+.footer-links li::before {
+  content: "▸";
+  position: absolute;
+  left: -12px;
+  color: #667eea;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.footer-links li:hover::before {
+  opacity: 1;
 }
 
 .footer-links a {
   color: #bdc3c7;
   text-decoration: none;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
   font-size: 0.9rem;
+  display: block;
+  padding: 2px 0;
 }
 
 .footer-links a:hover {
   color: #667eea;
+  transform: translateX(5px);
 }
 
+/* Footer Bottom - Removed bar/card effect */
 .footer-bottom {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 24px 0;
+  /* Removed background: rgba(0, 0, 0, 0.1); */
 }
 
 .footer-bottom-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .copyright {
   color: #bdc3c7;
   margin: 0;
   font-size: 0.9rem;
+  /* Simple text styling - no card/bar effect */
 }
 
 .footer-bottom-links {
   display: flex;
   gap: 24px;
+  flex-wrap: wrap;
 }
 
 .footer-bottom-links a {
@@ -118,10 +170,24 @@
   text-decoration: none;
   font-size: 0.85rem;
   transition: color 0.3s ease;
+  /* Removed padding and border-radius to eliminate card effect */
 }
 
 .footer-bottom-links a:hover {
   color: #667eea;
+  /* Removed background to eliminate card effect */
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 1024px) {
+  .footer-content {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 30px;
+  }
+
+  .footer-section:last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 768px) {
@@ -129,16 +195,39 @@
     grid-template-columns: 1fr;
     gap: 32px;
     padding: 40px 0 32px 0;
-  }
-  
-  .footer-bottom-content {
-    flex-direction: column;
-    gap: 16px;
     text-align: center;
   }
-  
+
+  .footer-heading::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .footer-links li:hover {
+    padding-left: 0;
+  }
+
+  .footer-links li::before {
+    display: none;
+  }
+
+  .footer-bottom-content {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+
   .footer-bottom-links {
     justify-content: center;
+    gap: 16px;
+  }
+
+  .social-links {
+    justify-content: center;
+  }
+
+  .footer-links a:hover {
+    transform: none;
   }
 }
 
@@ -146,12 +235,66 @@
   .footer-container {
     padding: 0 16px;
   }
-  
+
   .footer-content {
     padding: 32px 0 24px 0;
+    gap: 24px;
   }
-  
+
+  .footer-title {
+    font-size: 1.5rem;
+  }
+
   .social-links {
-    justify-content: center;
+    gap: 12px;
+  }
+
+  .social-links a {
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+  }
+
+  .footer-bottom-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Focus styles for accessibility */
+.social-links a:focus,
+.footer-links a:focus,
+.footer-bottom-links a:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .social-links a {
+    border: 2px solid white;
+  }
+
+  .footer-links a:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .social-links a,
+  .footer-links a,
+  .footer-links li,
+  .footer-section > * {
+    transition: none;
+    animation: none;
+  }
+
+  .social-links a:hover {
+    transform: none;
+  }
+
+  .footer-links a:hover {
+    transform: none;
   }
 }

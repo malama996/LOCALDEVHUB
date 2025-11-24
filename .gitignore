@@ -1,36 +1,155 @@
-# Node / general
+# ===========================================
+# LocalDevHub Git Ignore Rules
+# ===========================================
+
+# 🚨 CRITICAL - NEVER COMMIT SECRETS!
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.env.local
+*.env.backup
+secrets/
+credentials/
+config/secret*.json
+
+# 🔧 Node.js specific
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-.DS_Store
+lerna-debug.log*
+.pnp.*
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.js
 
-# Env files (DO NOT COMMIT SECRETS)
-.env
-.env.*
-*/.env
-*/.env.*
-server/.env
-client/.env
-
-# Build outputs
+# 🗂️ Build outputs and distributions
 client/build/
-coverage/
+client/dist/
+server/dist/
+build/
+dist/
+*.tar.gz
+*.zip
 
-# Editor/OS
-.vscode/
-.idea/
-*.swp
+# 🔍 Testing and coverage
+coverage/
+.nyc_output/
+*.lcov
+*.coverage
+*.html
+
+# 💻 OS and Editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Logs
+# VS Code
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# 📊 Logs
 logs/
 *.log
 server/*.log
+client/*.log
+yarn-metadata.json
 
-# Misc
-*.local
-*.cache
+# 🎯 Project specific
+# Server
+server/uploads/
+server/temp/
+server/storage/
 
+# Client
+client/.env
+client/.env.*
+client/.eslintcache
+client/coverage/
 
+# 📝 Temporary files
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+.next/
+out/
+.nuxt/
+
+# 🗄️ Database
+*.db
+*.sqlite
+*.sqlite3
+mongodb/
+data/
+
+# 📦 Package manager specific
+# npm
+package-lock.json
+# yarn
+yarn.lock
+# pnpm
+pnpm-lock.yaml
+
+# 🛠️ Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# 📱 Mobile (if applicable)
+*.ipa
+*.apk
+*.aab
+
+# 🔐 SSL certificates
+*.pem
+*.crt
+*.key
+*.csr
+
+# 🗃️ Backup files
+*.backup
+*.bak
+*.old
+
+# 🎨 Design files (if any)
+*.sketch
+*.fig
+*.xd
+
+# 📄 Documentation temp files
+*.aux
+*.toc
+*.out
+
+# ===========================================
+# SECURITY REMINDER
+# ===========================================
+
+# 🚨 NEVER COMMIT:
+# - API Keys
+# - Database passwords
+# - JWT secrets
+# - OAuth credentials
+# - Private keys
+# - Any sensitive configuration
+
+# ✅ ALWAYS KEEP:
+# - .env.example (template only)
+# - README.md
+# - package.json
+# - Source code

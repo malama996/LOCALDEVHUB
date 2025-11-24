@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../utils/api';
 import './Auth.css';
@@ -12,29 +12,59 @@ const Login = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
+  }, [error]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const response = await authAPI.login(formData);
+      const response = await authAPI.login({
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password
+      });
+      
+      // Store authentication data
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
-      navigate('/dashboard');
+      
+      // Navigate to dashboard
+      navigate('/dashboard', { replace: true });
+      
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      const errorMessage = err.response?.data?.message 
+        || err.message 
+        || 'Login failed. Please try again.';
+      setError(errorMessage);
+      
+      // Log error for monitoring
+      console.error('Login error:', {
+        email: formData.email,
+        error: err.response?.data || err.message,
+        timestamp: new Date().toISOString()
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData.email, formData.password, navigate]);
 
   return (
     <div className="auth-container">
@@ -44,11 +74,22 @@ const Login = () => {
           <p>Sign in to your LocalDevHub account</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="error-message">{error}</div>}
+        <form onSubmit={handleSubmit} className="auth-form" noValidate>
+          {error && (
+            <div 
+              className="error-message" 
+              role="alert"
+              aria-live="polite"
+            >
+              <i className="fas fa-exclamation-circle" aria-hidden="true"></i>
+              {error}
+            </div>
+          )}
           
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email" className="form-label">
+              Email Address *
+            </label>
             <input
               type="email"
               id="email"
@@ -57,11 +98,18 @@ const Login = () => {
               onChange={handleChange}
               required
               placeholder="Enter your email"
+              className={error ? 'error' : ''}
+              autoComplete="email"
+              aria-describedby={error ? "error-message" : undefined}
+              aria-invalid={!!error}
+              disabled={loading}
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password" className="form-label">
+              Password *
+            </label>
             <input
               type="password"
               id="password"
@@ -70,18 +118,39 @@ const Login = () => {
               onChange={handleChange}
               required
               placeholder="Enter your password"
+              className={error ? 'error' : ''}
+              autoComplete="current-password"
+              aria-describedby={error ? "error-message" : undefined}
+              aria-invalid={!!error}
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Signing In...' : 'Sign In'}
+          <button 
+            type="submit" 
+            className="auth-button" 
+            disabled={loading || !formData.email || !formData.password}
+            aria-busy={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner" aria-hidden="true"></span>
+                Signing In...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
             Don't have an account?{' '}
-            <Link to="/signup" className="auth-link">
+            <Link 
+              to="/signup" 
+              className="auth-link"
+              tabIndex={loading ? -1 : 0}
+            >
               Sign up here
             </Link>
           </p>
@@ -91,4 +160,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default React.memo(Login);

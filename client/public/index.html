@@ -2,30 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="icon" href="client/public/pictures/app logo.jpeg" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Permanent CSP Solution -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self' https://localdevhub-2.onrender.com;
-                   script-src 'self' 'unsafe-inline' 'unsafe-eval' https://localdevhub-2.onrender.com;
-                   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-                   font-src 'self' https://fonts.gstatic.com data:;
-                   img-src 'self' data: https: blob:;
-                   connect-src 'self' https://localdevhub-2.onrender.com wss:;
-                   frame-src 'none';
-                   object-src 'none';
-                   base-uri 'self';
-                   form-action 'self';"
-    />
+    <!-- ❌ REMOVED CSP for development - Add back for production -->
 
     <meta name="theme-color" content="#667eea" />
     <meta
       name="description"
       content="LocalDevHub - Connecting local developers with NGOs and SMEs for meaningful software projects"
     />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+
+    <!-- Fixed Font Awesome CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+    />
+
+    <link rel="apple-touch-icon" href="client/public/pictures/app logo.jpeg" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <title>LocalDevHub - Developer-Client Matchmaking Platform</title>
   </head>

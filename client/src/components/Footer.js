@@ -22,6 +22,12 @@ const Footer = () => {
               <a href="https://linkedin.com/company/localdevhub" target="_blank" rel="noopener noreferrer">
                 <i className="fab fa-linkedin"></i>
               </a>
+              <a href="https://facebook.com/company/localdevhub" target="_blank" rel="noopener noreferrer">
+                <i className="fab fa-facebook"></i>
+              </a>
+              <a href="https://whatsapp.com/company/localdevhub" target="_blank" rel="noopener noreferrer">
+                <i className="fab fa-whatsapp"></i>
+              </a>
               <a href="mailto:contact@localdevhub.com">
                 <i className="fas fa-envelope"></i>
               </a>

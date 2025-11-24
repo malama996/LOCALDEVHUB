@@ -5,11 +5,16 @@ import './Auth.css';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: 'arnold malama',
-    email: 'arnoldmalamaz@gmail.com',
-    password: 'arnold123',
-    confirmPassword: 'arnold123',
-    userType: 'developer'
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    userType: 'developer',
+    location: '',
+    skills: '',
+    hourlyRate: '',
+    experience: '',
+    organization: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,14 +46,37 @@ const Signup = () => {
       return;
     }
 
+    // Validate required fields
+    if (!formData.location.trim()) {
+      setError('Location is required');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { confirmPassword, ...userData } = formData;
+      // Prepare data for backend
+      const userData = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        userType: formData.userType,
+        location: formData.location,
+        // Optional fields - only include if they have values
+        ...(formData.skills && { skills: formData.skills.split(',').map(skill => skill.trim()) }),
+        ...(formData.hourlyRate && { hourlyRate: parseFloat(formData.hourlyRate) }),
+        ...(formData.experience && { experience: parseInt(formData.experience) }),
+        ...(formData.organization && { organization: formData.organization })
+      };
+
+      console.log('Sending registration data:', userData);
       const response = await authAPI.register(userData);
+      
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      setError(err.response?.data?.message || err.response?.data?.errors?.[0]?.msg || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +94,7 @@ const Signup = () => {
           {error && <div className="error-message">{error}</div>}
           
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+            <label htmlFor="name">Full Name *</label>
             <input
               type="text"
               id="name"
@@ -79,7 +107,7 @@ const Signup = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">Email Address *</label>
             <input
               type="email"
               id="email"
@@ -92,7 +120,7 @@ const Signup = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="userType">Account Type</label>
+            <label htmlFor="userType">Account Type *</label>
             <select
               id="userType"
               name="userType"
@@ -106,7 +134,78 @@ const Signup = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="location">Location *</label>
+            <input
+              type="text"
+              id="location"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              required
+              placeholder="Enter your city and country"
+            />
+          </div>
+
+          {/* Conditional fields based on user type */}
+          {formData.userType === 'developer' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="skills">Skills (Optional)</label>
+                <input
+                  type="text"
+                  id="skills"
+                  name="skills"
+                  value={formData.skills}
+                  onChange={handleChange}
+                  placeholder="Enter skills separated by commas (e.g., JavaScript, React, Node.js)"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="hourlyRate">Hourly Rate (Optional)</label>
+                <input
+                  type="number"
+                  id="hourlyRate"
+                  name="hourlyRate"
+                  value={formData.hourlyRate}
+                  onChange={handleChange}
+                  placeholder="Enter your hourly rate in USD"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="experience">Years of Experience (Optional)</label>
+                <input
+                  type="number"
+                  id="experience"
+                  name="experience"
+                  value={formData.experience}
+                  onChange={handleChange}
+                  placeholder="Enter years of experience"
+                  min="0"
+                />
+              </div>
+            </>
+          )}
+
+          {formData.userType === 'client' && (
+            <div className="form-group">
+              <label htmlFor="organization">Organization Name (Optional)</label>
+              <input
+                type="text"
+                id="organization"
+                name="organization"
+                value={formData.organization}
+                onChange={handleChange}
+                placeholder="Enter your organization name"
+              />
+            </div>
+          )}
+
+          <div className="form-group">
+            <label htmlFor="password">Password *</label>
             <input
               type="password"
               id="password"
@@ -119,7 +218,7 @@ const Signup = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
+            <label htmlFor="confirmPassword">Confirm Password *</label>
             <input
               type="password"
               id="confirmPassword"
